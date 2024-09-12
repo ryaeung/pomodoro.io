@@ -18,10 +18,6 @@ A simple, open source pomodoro timer, [right here]([https://ryaeung.github.io/po
 4. **Start Timer**: Click "Start" to begin the Pomodoro session.
 5. **Pause/Skip**: Use the "Pause" button to pause the timer or "Skip to Next" to move to the next task.
 
-## Screenshots
-
-![Pomodoro Timer]([https://cdn.discordapp.com/attachments/999680763379322901/1283789665228427304/2024-09-12_10.01.36.png?ex=66e445cb&is=66e2f44b&hm=d511472654a1879b2e010d09fd7747455bcd4ea09dcb7f2935414c73f63a1c03&))
-
 ## License
 
 This project is open-source and available under the [MIT License](LICENSE).
