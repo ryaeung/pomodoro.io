@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>pomodoro.io</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #f8e8e0;
+            color: #4a4a4a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .container {
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            width: 100%;
+            max-width: 800px;
+            display: flex;
+        }
+        .left-panel, .right-panel {
+            flex: 1;
+            padding: 0 10px;
+        }
+        .logo {
+            width: 100%;
+            max-width: 300px;
+            display: block;
+            margin: 0 auto 20px;
+        }
+        h2 {
+            text-align: center;
+            color: #d85a5a;
+        }
+        .timer {
+            font-size: 48px;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        button {
+            background-color: #d85a5a;
+            border: none;
+            border-radius: 20px;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 0 5px;
+            padding: 10px 20px;
+            transition: background-color 0.3s ease;
+            font-family: 'Nunito', sans-serif;
+        }
+        button:hover {
+            background-color: #c04545;
+        }
+        input[type="number"], input[type="text"], textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #d85a5a;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            font-family: 'Nunito', sans-serif;
+            box-sizing: border-box;
+        }
+        textarea {
+            height: 100px;
+            resize: vertical;
+        }
+        .task-list {
+            margin-top: 20px;
+        }
+        .task-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .task-item input[type="checkbox"] {
+            margin-right: 10px;
+        }
+        .task-item span {
+            flex-grow: 1;
+        }
+        .task-item input[type="number"] {
+            width: 60px;
+            margin-left: 10px;
+        }
+        .completed {
+            text-decoration: line-through;
+            color: #888;
+        }
+        #pomodoroCount {
+            text-align: center;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        #timeLog {
+            margin-top: 20px;
+            font-size: 14px;
+        }
+        #languageToggle {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            background-color: #d85a5a;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 5px 10px;
+        }
+    </style>
+</head>
+<body>
+    <button id="languageToggle">EN</button>
+    <div class="container">
+        <div class="left-panel">
+            <img src="https://cdn.discordapp.com/attachments/999680763379322901/1283782280514371716/pomodoro_io.001.png?ex=66e43eeb&is=66e2ed6b&hm=a93f87f05ae6c5164550f089ce4c3fa5fa4326ca677b5f161596bfe0f087fc44&" alt="pomodoro.io" class="logo">
+            <div id="pomodoroCount">No tasks scheduled</div>
+            <div class="timer" id="timer">25:00</div>
+            <div class="controls">
+                <button id="startPauseBtn">Start</button>
+                <button id="skipBtn">Skip to Next</button>
+            </div>
+            <div>
+                <label for="breakLength" id="breakLengthLabel">Break Length (minutes):</label>
+                <input type="number" id="breakLength" min="1" max="30" value="5">
+            </div>
+            <div id="timeLog"></div>
+        </div>
+        <div class="right-panel">
+            <div class="task-list">
+                <h2 id="tasksHeader">Tasks</h2>
+                <textarea id="taskInput" placeholder="Enter your tasks, one per line"></textarea>
+                <button id="scheduleTasks">Schedule Tasks</button>
+            </div>
+            <div id="tasks"></div>
+        </div>
+    </div>
+
+    <script>
+        let timer;
+        let timeLeft = 25 * 60;
+        let isRunning = false;
+        let tasks = [];
+        let currentTaskIndex = 0;
+        let isBreak = false;
+        let breakLength = 5;
+        let startTime;
+        let timeLog = [];
+        let currentLanguage = 'en';
+
+        const timerDisplay = document.getElementById('timer');
+        const startPauseBtn = document.getElementById('startPauseBtn');
+        const skipBtn = document.getElementById('skipBtn');
+        const breakLengthInput = document.getElementById('breakLength');
+        const taskInput = document.getElementById('taskInput');
+        const scheduleTasksBtn = document.getElementById('scheduleTasks');
+        const tasksContainer = document.getElementById('tasks');
+        const pomodoroCountDisplay = document.getElementById('pomodoroCount');
+        const timeLogDisplay = document.getElementById('timeLog');
+        const languageToggle = document.getElementById('languageToggle');
+        const breakLengthLabel = document.getElementById('breakLengthLabel');
+        const tasksHeader = document.getElementById('tasksHeader');
+
+        const alarmSound = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-alarm-digital-clock-beep-989.mp3');
+
+        const translations = {
+            en: {
+                start: 'Start',
+                pause: 'Pause',
+                skipToNext: 'Skip to Next',
+                breakLength: 'Break Length (minutes):',
+                scheduleTasks: 'Schedule Tasks',
+                tasks: 'Tasks',
+                noTasksScheduled: 'No tasks scheduled',
+                allTasksCompleted: 'All tasks completed!',
+                breakOver: 'Break time is over! Ready for the next task?',
+                pomodoroCompleted: 'Pomodoro completed! Time for a break.',
+                task: 'Task',
+                pomodoro: 'Pomodoro',
+                break: 'Break',
+                timeLog: 'Time Log:',
+                enterTasks: 'Enter your tasks, one per line'
+            },
+            zh: {
+                start: '開始',
+                pause: '暫停',
+                skipToNext: '跳到下一個',
+                breakLength: '休息時間（分鐘）：',
+                scheduleTasks: '安排任務',
+                tasks: '任務',
+                noTasksScheduled: '沒有安排任務',
+                allTasksCompleted: '所有任務完成！',
+                breakOver: '休息時間結束！準備好下一個任務了嗎？',
+                pomodoroCompleted: '番茄鐘完成！該休息了。',
+                task: '任務',
+                pomodoro: '番茄鐘',
+                break: '休息',
+                timeLog: '時間紀錄：',
+                enterTasks: '請逐行輸入工作事項'
+            },
+            ja: {
+                start: '開始',
+                pause: '一時停止',
+                skipToNext: '次へスキップ',
+                breakLength: '休憩時間（分）：',
+                scheduleTasks: 'タスクをスケジュール',
+                tasks: 'タスク',
+                noTasksScheduled: 'タスクがスケジュールされていません',
+                allTasksCompleted: 'すべてのタスクが完了しました！',
+                breakOver: '休憩時間が終わりました！次のタスクの準備はできていますか？',
+                pomodoroCompleted: 'ポモドーロが完了しました！休憩時間です。',
+                task: 'タスク',
+                pomodoro: 'ポモドーロ',
+                break: '休憩',
+                timeLog: '時間ログ：',
+                enterTasks: 'タスクを1行ずつ入力してください'
+            }
+        };
+
+        function updateTimer() {
+            const minutes = Math.floor(Math.abs(timeLeft) / 60);
+            const seconds = Math.abs(timeLeft) % 60;
+            const sign = timeLeft < 0 ? '-' : '';
+            timerDisplay.textContent = `${sign}${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        function startPauseTimer() {
+            if (!isRunning) {
+                isRunning = true;
+                startPauseBtn.textContent = translations[currentLanguage].pause;
+                startTime = Date.now() - ((tasks[currentTaskIndex].duration * 60) - timeLeft) * 1000;
+                timer = setInterval(() => {
+                    timeLeft--;
+                    updateTimer();
+                    if (timeLeft === 0) {
+                        alarmSound.play();
+                        clearInterval(timer);
+                        isRunning = false;
+                        startPauseBtn.textContent = translations[currentLanguage].start;
+                        if (isBreak) {
+                            alert(translations[currentLanguage].breakOver);
+                            startNextTask();
+                        } else {
+                            const actualTime = Math.round((Date.now() - startTime) / 1000);
+                            timeLog.push(`${translations[currentLanguage].task} ${currentTaskIndex + 1}: ${formatTime(actualTime)}`);
+                            updateTimeLog();
+                            tasks[currentTaskIndex].completed = true;
+                            renderTasks();
+                            alert(translations[currentLanguage].pomodoroCompleted);
+                            startBreak();
+                        }
+                    }
+                }, 1000);
+            } else {
+                clearInterval(timer);
+                isRunning = false;
+                startPauseBtn.textContent = translations[currentLanguage].start;
+            }
+        }
+
+        function skipToNext() {
+            clearInterval(timer);
+            isRunning = false;
+            startPauseBtn.textContent = translations[currentLanguage].start;
+            if (isBreak) {
+                startNextTask();
+            } else {
+                const actualTime = Math.round((Date.now() - startTime) / 1000);
+                timeLog.push(`${translations[currentLanguage].task} ${currentTaskIndex + 1}: ${formatTime(actualTime)} (Skipped)`);
+                updateTimeLog();
+                tasks[currentTaskIndex].completed = true;
+                renderTasks();
+                startBreak();
+            }
+        }
+
+        function startBreak() {
+            isBreak = true;
+            timeLeft = breakLength * 60;
+            updateTimer();
+            pomodoroCountDisplay.textContent = `${translations[currentLanguage].break} ${currentTaskIndex + 1}`;
+        }
+
+        function startNextTask() {
+            isBreak = false;
+            currentTaskIndex++;
+            if (currentTaskIndex < tasks.length) {
+                timeLeft = tasks[currentTaskIndex].duration * 60;
+                updateTimer();
+                pomodoroCountDisplay.textContent = `${translations[currentLanguage].task} ${currentTaskIndex + 1} - ${translations[currentLanguage].pomodoro} ${currentTaskIndex + 1}`;
+            } else {
+                alert(translations[currentLanguage].allTasksCompleted);
+                resetTasks();
+            }
+        }
+
+        function scheduleTasks() {
+            const taskList = taskInput.value.trim().split('\n');
+            tasks = taskList.map(task => ({ text: task, duration: 25, completed: false }));
+            renderTasks();
+            taskInput.value = '';
+            resetTasks();
+        }
+
+        function toggleTask(index) {
+            tasks[index].completed = !tasks[index].completed;
+            renderTasks();
+        }
+
+        function updateTaskDuration(index, duration) {
+            tasks[index].duration = parseInt(duration);
+            renderTasks();
+            refreshTimer();
+        }
+
+        function renderTasks() {
+            tasksContainer.innerHTML = '';
+            tasks.forEach((task, index) => {
+                const taskElement = document.createElement('div');
+                taskElement.classList.add('task-item');
+                taskElement.innerHTML = `
+                    <input type="checkbox" ${task.completed ? 'checked' : ''} onchange="toggleTask(${index})">
+                    <span class="${task.completed ? 'completed' : ''}">${task.text}</span>
+                    <input type="number" value="${task.duration}" min="1" max="60" onchange="updateTaskDuration(${index}, this.value)">
+                `;
+                tasksContainer.appendChild(taskElement);
+            });
+        }
+
+        function updateTimeLog() {
+            timeLogDisplay.innerHTML = `<h3>${translations[currentLanguage].timeLog}</h3>` + timeLog.join('<br>');
+        }
+
+        function formatTime(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = seconds % 60;
+            return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+        }
+
+        function resetTasks() {
+            currentTaskIndex = 0;
+            isBreak = false;
+            if (tasks.length > 0) {
+                timeLeft = tasks[0].duration * 60;
+                updateTimer();
+                pomodoroCountDisplay.textContent = `${translations[currentLanguage].task} 1 - ${translations[currentLanguage].pomodoro} 1`;
+            } else {
+                timeLeft = 25 * 60;
+                updateTimer();
+                pomodoroCountDisplay.textContent = translations[currentLanguage].noTasksScheduled;
+            }
+        }
+
+        function refreshTimer() {
+            if (currentTaskIndex < tasks.length) {
+                timeLeft = tasks[currentTaskIndex].duration * 60;
+                updateTimer();
+            }
+        }
+
+        function toggleLanguage() {
+            const languages = ['en', 'zh', 'ja'];
+            const currentIndex = languages.indexOf(currentLanguage);
+            currentLanguage = languages[(currentIndex + 1) % languages.length];
+            languageToggle.textContent = currentLanguage.toUpperCase();
+            updateInterface();
+        }
+
+        function updateInterface() {
+            startPauseBtn.textContent = isRunning ? translations[currentLanguage].pause : translations[currentLanguage].start;
+            skipBtn.textContent = translations[currentLanguage].skipToNext;
+            breakLengthLabel.textContent = translations[currentLanguage].breakLength;
+            scheduleTasksBtn.textContent = translations[currentLanguage].scheduleTasks;
+            tasksHeader.textContent = translations[currentLanguage].tasks;
+            taskInput.placeholder = translations[currentLanguage].enterTasks;
+            if (tasks.length === 0) {
+                pomodoroCountDisplay.textContent = translations[currentLanguage].noTasksScheduled;
+            } else if (isBreak) {
+                pomodoroCountDisplay.textContent = `${translations[currentLanguage].break} ${currentTaskIndex + 1}`;
+            } else {
+                pomodoroCountDisplay.textContent = `${translations[currentLanguage].task} ${currentTaskIndex + 1} - ${translations[currentLanguage].pomodoro} ${currentTaskIndex + 1}`;
+            }
+            updateTimeLog();
+        }
+
+        startPauseBtn.addEventListener('click', startPauseTimer);
+        skipBtn.addEventListener('click', skipToNext);
+        scheduleTasksBtn.addEventListener('click', scheduleTasks);
+        languageToggle.addEventListener('click', toggleLanguage);
+
+        breakLengthInput.addEventListener('change', () => {
+            breakLength = parseInt(breakLengthInput.value);
+        });
+
+        updateTimer();
+        updateInterface();
+    </script>
+</body>
+</html>
