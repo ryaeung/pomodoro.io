@@ -1,4 +1,4 @@
-# <img src="https://cdn.discordapp.com/attachments/999680763379322901/1283782280514371716/pomodoro_io.001.png?ex=66e43eeb&is=66e2ed6b&hm=a93f87f05ae6c5164550f089ce4c3fa5fa4326ca677b5f161596bfe0f087fc44&" alt="Pomodoro Timer" width="150">
+# <img src="https://cdn.discordapp.com/attachments/999680763379322901/1283782280514371716/pomodoro_io.001.png?ex=66e43eeb&is=66e2ed6b&hm=a93f87f05ae6c5164550f089ce4c3fa5fa4326ca677b5f161596bfe0f087fc44&" alt="Pomodoro Timer" width="200">
 
 A simple, open source pomodoro timer, [right here]([https://ryaeung.github.io/pomodoro.io/]).
 
