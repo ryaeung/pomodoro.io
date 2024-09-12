@@ -20,7 +20,7 @@ A simple, open source pomodoro timer, [right here]([https://ryaeung.github.io/po
 
 ## Screenshots
 
-![Pomodoro Timer]([https://cdn.discordapp.com/attachments/999680763379322901/1283782280514371716/pomodoro_io.001.png?ex=66e43eeb&is=66e2ed6b&hm=a93f87f05ae6c5164550f089ce4c3fa5fa4326ca677b5f161596bfe0f087fc44&](https://cdn.discordapp.com/attachments/999680763379322901/1283789665228427304/2024-09-12_10.01.36.png?ex=66e445cb&is=66e2f44b&hm=d511472654a1879b2e010d09fd7747455bcd4ea09dcb7f2935414c73f63a1c03&))
+![Pomodoro Timer]([https://cdn.discordapp.com/attachments/999680763379322901/1283789665228427304/2024-09-12_10.01.36.png?ex=66e445cb&is=66e2f44b&hm=d511472654a1879b2e010d09fd7747455bcd4ea09dcb7f2935414c73f63a1c03&))
 
 ## License
 
